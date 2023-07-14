@@ -72,7 +72,7 @@ def evaluate(ckpt_file):
     for k, v in ckpt["model"].items():
         if "model.actor.model." in k:
             state_dict[k[18:]] = v
-    model = ExpertNetwork(agent_dim=3, neighbor_dim=4, out_dim=2)
+    model = ExpertNetwork(agent_dim=3, neighbor_dim=6, out_dim=2)
     model.load_state_dict(state_dict)
     if settings.device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"

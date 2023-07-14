@@ -4,6 +4,7 @@ import torch
 
 from env.agents.base_agent import BaseAgent
 from .networks import Policy
+import config
 
 class DLAgent(BaseAgent):
 
@@ -26,7 +27,9 @@ class DLAgent(BaseAgent):
                 neighbor.position.x - self.position.x,
                 neighbor.position.y - self.position.y,
                 neighbor.velocity.x - self.velocity.x,
-                neighbor.velocity.y - self.velocity.y
+                neighbor.velocity.y - self.velocity.y,
+                numpy.cos(neighbor._orientation),
+                numpy.sin(neighbor._orientation)
             ])
         
         if self.expert:            
@@ -36,7 +39,9 @@ class DLAgent(BaseAgent):
                 0., 0., 0., 0. # dummy neighbor representing agent itself
             ] + n
                    
-        heading = numpy.arctan2(dpy, dpx)
+        #heading = numpy.arctan2(dpy, dpx)
+        heading = numpy.arctan2(numpy.sin(self._orientation), numpy.cos(self._orientation))
+        
         c = numpy.cos(-heading)
         s = numpy.sin(-heading)
         R = numpy.asarray([
@@ -48,7 +53,7 @@ class DLAgent(BaseAgent):
         if dist > self.observe_radius: dist = self.observe_radius
         ob = [
             dist, v[0], v[1],
-            0., 0., 0., 0.
+            0., 0., 0., 0., 0., 0.
         ] + n
         return ob
 
@@ -60,7 +65,7 @@ class DLAgent(BaseAgent):
         elif len(s) > 2:  # infer from states
             a = self.model(
                 self.model.placeholder(s[:self.model.agent_dim]),
-                self.model.placeholder(s[self.model.agent_dim:]).view(-1, 4)
+                self.model.placeholder(s[self.model.agent_dim:]).view(-1, 6)
             ).cpu().tolist()
         else:
             raise ValueError
@@ -88,9 +93,11 @@ class DLAgent(BaseAgent):
         elif ang_vel < -numpy.pi:
             ang_vel += numpy.pi*2
 
-        #return lin_vel, ang_vel
-    
-        return [(lin_vel-self._lin_vel)*env.fps, (ang_vel-self._ang_vel)*env.fps]
+        
+        if config.ACC == True:
+            return [(lin_vel-self._lin_vel)*env.fps, (ang_vel-self._ang_vel)*env.fps]
+        
+        return lin_vel, ang_vel
 
         vx_, vy_ = a[0], a[1]
         return [(vx_-self.velocity[0])*env.fps, (vy_-self.velocity[1])*env.fps]
@@ -99,18 +106,33 @@ class DLAgent(BaseAgent):
         if not hasattr(self, "expert_ob"): return [0, 0]
 
         if callable(self.expert):
+            #print(self.expert_ob)
+            a = self.expert_ob[4:8]
+            x = self.expert_ob[8:]
+            x = numpy.array(x).reshape(-1,6)
+            x = numpy.delete(x, numpy.s_[4:], 1).reshape(-1)
+            x = list(x)
+            a = a + x
             v = self.expert(
                 self.expert.placeholder(self.expert_ob[:4]),
-                self.expert.placeholder(self.expert_ob[4:]).view(-1, 4)
+                
+                self.expert.placeholder(a).view(-1, 4)
             ).cpu().tolist()
             vx_, vy_ = v[0], v[1]
             return [(vx_-self.expert_ob[2])*env.fps, (vy_-self.expert_ob[3])*env.fps]
         
         res = []
         for expert in self.expert:
+            a = self.expert_ob[4:8]
+            x = self.expert_ob[8:]
+            x = numpy.array(x).reshape(-1,6)
+            x = numpy.delete(x, numpy.s_[4:], 1).reshape(-1)
+            x = list(x)
+            a = a + x
+
             v = expert(
                 expert.placeholder(self.expert_ob[:4]),
-                expert.placeholder(self.expert_ob[4:]).view(-1, 4)
+                expert.placeholder(a).view(-1, 4)
             ).cpu().tolist()
             vx_, vy_ = v[0], v[1]
             a = [(vx_-self.expert_ob[2])*env.fps, (vy_-self.expert_ob[3])*env.fps]

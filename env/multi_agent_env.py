@@ -6,7 +6,7 @@ from .scenarios import BaseScenario
 from .agents.base_agent import BaseAgent
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-
+import config
 
 class DecentralizedMultiAgentEnv():
 
@@ -79,7 +79,11 @@ class DecentralizedMultiAgentEnv():
                 #     agent.velocity.x+agent.accelerate.x/self.fps, \
                 #     agent.velocity.y+agent.accelerate.y/self.fps
                 agent.accelerate = 0, 0
-                agent._lin_acc, agent._ang_acc = a
+                if config.ACC == True:
+                    agent._lin_acc, agent._ang_acc = a
+                else:
+                    agent._lin_vel, agent._ang_vel = a
+                
 
         for _ in range(self.frame_skip):
             for agent in self.agents:
@@ -90,8 +94,9 @@ class DecentralizedMultiAgentEnv():
                     self.info["arrived_agents"].add(agent)
                     continue
                 
-                agent._lin_vel += agent._lin_acc * self.step_time
-                agent._ang_vel += agent._ang_acc * self.step_time
+                if config.ACC == True:
+                    agent._lin_vel += agent._lin_acc * self.step_time
+                    agent._ang_vel += agent._ang_acc * self.step_time
                 
                 # if agent._ang_vel > numpy.pi:
                 #     agent._ang_vel -= numpy.pi*2

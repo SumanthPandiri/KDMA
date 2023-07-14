@@ -32,9 +32,9 @@ def env_wrapper(expert=None, evaluate=False):
         expert=expert
         )
     if evaluate:
-        scenario = CircleCrossingScenario(n_agents=3, agent_wrapper=agent_wrapper, min_distance=0.3, radius=4)
+        scenario = CircleCrossingScenario(n_agents=4, agent_wrapper=agent_wrapper, min_distance=0.3, radius=4)
     else:
-        kwargs = dict(n_agents=3, agent_wrapper=agent_wrapper, min_distance=0.3)
+        kwargs = dict(n_agents=4, agent_wrapper=agent_wrapper, min_distance=0.3)
         scenario = CompositeScenarios([
             CircleCrossingScenario(radius=(4, 6), noise=0.5, **kwargs),
             SquareCrossingScenario(width=(8, 12), height=(8, 12), vertical=True, horizontal=True, **kwargs),

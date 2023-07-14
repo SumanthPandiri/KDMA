@@ -73,7 +73,7 @@ class ActorNetwork(torch.nn.Module):
     def __init__(self, init_std:float=.5):
         super().__init__()
         self.n_neighbors = None # sequence length for batch update
-        self.model = Policy(agent_dim=3, neighbor_dim=4, out_dim=2)
+        self.model = Policy(agent_dim=3, neighbor_dim=6, out_dim=2)
         self.log_std = torch.nn.Parameter(torch.tensor([
             numpy.log(init_std), numpy.log(init_std)
         ], dtype=torch.float32))
@@ -83,9 +83,9 @@ class ActorNetwork(torch.nn.Module):
     def forward(self, s, neighbors=None, n_neighbors=None):
         if neighbors is None:
             if s.ndim == 1:
-                agent, neighbors = s[:3], s[3:].view(-1, 4)
+                agent, neighbors = s[:3], s[3:].view(-1, 6)
             else: #s.ndim == 2
-                agent, neighbors = s[:, :3], s[:, 3:].view(s.size(0), -1, 4)
+                agent, neighbors = s[:, :3], s[:, 3:].view(s.size(0), -1, 6)
             mu = self.model(agent, neighbors, self.n_neighbors)
         else:
             mu = self.model(s, neighbors, self.n_neighbors if n_neighbors is None else n_neighbors)
@@ -97,11 +97,11 @@ class CriticNetwork(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.n_neighbors = None # sequence length for batch update
-        self.model = Policy(agent_dim=3, neighbor_dim=4, out_dim=1)
+        self.model = Policy(agent_dim=3, neighbor_dim=6, out_dim=1)
         
     def forward(self, s):
         if s.ndim == 1:
-            agent, neighbors = s[:3], s[3:].view(-1, 4)
+            agent, neighbors = s[:3], s[3:].view(-1, 6)
         else: #s.ndim == 2
-            agent, neighbors = s[:, :3], s[:, 3:].view(s.size(0), -1, 4)
+            agent, neighbors = s[:, :3], s[:, 3:].view(s.size(0), -1, 6)
         return self.model(agent, neighbors, self.n_neighbors)
