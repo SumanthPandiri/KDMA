@@ -1,3 +1,17 @@
+Developed during my REU in the Summer of 2023, this is an adaptation of the KDMA code made to work for physical differential drive robot agents. Major changes:
+
+    converted the kinematics from cartesian to differential drive
+    modified the state space to include the neighbor agents' orientations as input to the network
+    changed the state space to be in local orientation instead of goal-oriented
+    modified the expert network to be in the velocity range of a robot (0.4 m/s instead of 1.3 m/s)
+
+Currently made to train and test with 4 agents. I'm still tweaking hyperparameters to get the accuracy to 1.0, currently at around 0.95.
+
+With more time: train on a larger variety of number of agents, move from velocities to acceleration.
+
+KDMA README:
+
+
 # Human-Inspired Multi-Agent Navigation using Knowledge Distillation
 
 This is the code repository to support the paper _**Human-Inspired Multi-Agent Navigation using Knowledge Distillation**. [[arXiv](https://arxiv.org/abs/2103.10000)]
